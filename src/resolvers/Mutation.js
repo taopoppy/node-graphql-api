@@ -19,7 +19,7 @@ const Mutation = {
 		return user // 返回新的用户信息
 	},
 	createPost(parent, args, ctx, info) {
-		const { db } = ctx
+		const { db, pubsub } = ctx
 		const { data } = args
 		// 判断author是否存在
 		const authorExist = db.allUsers.some((user)=> {
@@ -37,10 +37,15 @@ const Mutation = {
 		}
 
 		db.allPosts.push(post) // 将文章保存在数据库
+		if(data.published) {
+			pubsub.publish("post", {
+				post
+			})
+		}
 		return post // 返回新的文章信息
 	},
 	createComment(parent, args, ctx, info) {
-		const { db } = ctx
+		const { db, pubsub } = ctx
 		const { data } = args
 		// 判断作者和文章是否存在
 		const authorExist = db.allUsers.some((user)=> {
@@ -60,6 +65,9 @@ const Mutation = {
 		}
 
 		db.allComments.push(comment) // 将评论保存在数据库当中
+		pubsub.publish(`comment ${data.post}`, {
+			comment
+		})
 		return comment
 	},
 	deleteUser(parent,args,ctx, info){

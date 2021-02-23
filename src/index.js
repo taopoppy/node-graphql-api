@@ -1,10 +1,14 @@
-const { GraphQLServer } = require('graphql-yoga')
+const { GraphQLServer, PubSub } = require('graphql-yoga')
 const { db } = require('./db.js')
 const { Query } = require('./resolvers/Query')
 const { Comment } = require('./resolvers/Comment')
 const { Mutation } = require('./resolvers/Mutation')
 const { Post } = require('./resolvers/Post')
 const { User } = require('./resolvers/User')
+const { Subscription } = require('./resolvers/Subscription')
+
+// 订阅实现
+const pubsub = new PubSub()
 
 // Resolvers(函数实现)
 const resolvers= {
@@ -12,12 +16,13 @@ const resolvers= {
 	User,
 	Post,
 	Query,
-	Mutation
+	Mutation,
+	Subscription
 }
 
 const server = new GraphQLServer({
 	typeDefs:'./src/schema.graphql',
-	context: {db},
+	context: {db, pubsub},
 	resolvers
 })
 
