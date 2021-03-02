@@ -4,7 +4,7 @@ const { User, Comment, Post } = require("../models")
 
 const users = {
   type: new GraphQLList(UserType),
-  description: "Retrieves list of users",
+  description: "查询用户列表",
   resolve(parent, args) {
     return User.find()
   },
@@ -12,7 +12,7 @@ const users = {
 
 const user = {
   type: UserType,
-  description: "Retrieves one user",
+  description: "查询用户",
   args: { id: { type: GraphQLID } },
 
   resolve(parent, args) {
@@ -22,7 +22,7 @@ const user = {
 
 const posts = {
   type: new GraphQLList(PostType),
-  description: "Retrieves list of posts",
+  description: "查询文章列表",
   resolve() {
     return Post.find()
   },
@@ -30,7 +30,7 @@ const posts = {
 
 const post = {
   type: PostType,
-  description: "Retrieves one post",
+  description: "查询文章",
   args: { id: { type: GraphQLID } },
   resolve(_, args) {
     return Post.findById(args.id)
@@ -38,7 +38,7 @@ const post = {
 }
 const comments = {
   type: new GraphQLList(CommentType),
-  description: "Retrieves list of comments",
+  description: "查询评论列表",
   resolve() {
     return Comment.find()
   },
@@ -46,7 +46,7 @@ const comments = {
 
 const comment = {
   type: CommentType,
-  description: "Retrieves one comment",
+  description: "查询评论",
   args: { id: { type: GraphQLID } },
   resolve(_, args) {
     return Comment.findById(args.id)

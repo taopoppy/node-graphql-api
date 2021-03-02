@@ -9,7 +9,7 @@ const { User, Post, Comment } = require("../models")
 
 const UserType = new GraphQLObjectType({
   name: "User",
-  description: "User type",
+  description: "用户类型",
   fields: () => ({
     id: { type: GraphQLID },
     username: { type: GraphQLString },
@@ -36,7 +36,7 @@ const UserType = new GraphQLObjectType({
 
 const PostType = new GraphQLObjectType({
   name: "Post",
-  description: "Post type",
+  description: "文章类型",
   fields: () => ({
     id: { type: GraphQLID },
     title: { type: GraphQLString },
@@ -58,7 +58,7 @@ const PostType = new GraphQLObjectType({
 
 const CommentType = new GraphQLObjectType({
   name: "Comment",
-  description: "Comment type",
+  description: "评论类型",
   fields: () => ({
     id: { type: GraphQLID },
     comment: { type: GraphQLString },

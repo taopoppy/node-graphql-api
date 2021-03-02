@@ -1,3 +1,5 @@
+const { PostModel} = require('../models/index')
+
 const Post = {
 	author(parent, args, ctx, info) {
 		const { db } = ctx

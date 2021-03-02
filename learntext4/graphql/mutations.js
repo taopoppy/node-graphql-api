@@ -8,7 +8,7 @@ const { createJwtToken } = require("../util/auth")
 // 注册
 const register = {
   type: GraphQLString,
-  description: "Register new user",
+  description: "注册用户",
   args: {
     username: { type: GraphQLString },
     email: { type: GraphQLString },
@@ -28,14 +28,14 @@ const register = {
 // 登录
 const login = {
   type: GraphQLString,
-  description: "Login user",
+  description: "用户登录",
   args: {
     email: { type: GraphQLString },
     password: { type: GraphQLString },
   },
   async resolve(parent, args) {
     const user = await User.findOne({ email: args.email }).select("+password")
-    console.log(user)
+    console.log('user',user)
     if (!user || args.password !== user.password) {
       throw new Error("Invalid credentials")
     }
@@ -47,7 +47,7 @@ const login = {
 
 const addPost = {
   type: PostType,
-  description: "Create new blog post",
+  description: "新增文章",
   args: {
     title: { type: GraphQLString },
     body: { type: GraphQLString },
@@ -70,7 +70,7 @@ const addPost = {
 
 const updatePost = {
   type: PostType,
-  description: "Update blog post",
+  description: "更新文章",
   args: {
     id: { type: GraphQLString },
     title: { type: GraphQLString },
@@ -102,7 +102,7 @@ const updatePost = {
 
 const deletePost = {
   type: GraphQLString,
-  description: "Delete post",
+  description: "删除文章",
   args: {
     postId: { type: GraphQLString },
   },
@@ -125,7 +125,7 @@ const deletePost = {
 
 const addComment = {
   type: CommentType,
-  description: "Create a new comment on the blog post",
+  description: "创建新的评论",
   args: {
     comment: { type: GraphQLString },
     postId: { type: GraphQLString },
@@ -142,7 +142,7 @@ const addComment = {
 
 const updateComment = {
   type: CommentType,
-  description: "Update blog comment",
+  description: "更新评论",
   args: {
     id: { type: GraphQLString },
     comment: { type: GraphQLString },
@@ -173,7 +173,7 @@ const updateComment = {
 
 const deleteComment = {
   type: GraphQLString,
-  description: "Delete comment",
+  description: "删除评论",
   args: {
     commentId: { type: GraphQLString },
   },

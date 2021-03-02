@@ -7,17 +7,23 @@ type Query{
 
 # 根突变
 type Mutation{
+	login(data:LoginInput!):LoginResponse!
 	createUser(data:CreateUserInput!):User!
 	createPost(data:CreatePostInput!):Post!
 	createComment(data:CreateCommentInput!):Comment!
-	deleteUser(id:ID!):User!
+	deleteUser(userid:ID!):User!
 	deletePost(id:ID!):Post!
 	deleteComment(id:ID!):Comment!
-	updateUser(id:ID!,data:UpdateUserInput!):User!
+	updateUser(data:UpdateUserInput!):User!
 	updatePost(id:ID!,data:UpdatePostInput!):Post!
 	updateComment(id:ID!,data:UpdateCommentInput!):Comment!
 }
 
+type LoginResponse{
+	message: String!
+	user:User
+	token: String
+}
 # 订阅类型
 type Subscription{
 	comment(postId:ID!):commentSubscriptionPayload!
@@ -38,43 +44,52 @@ enum MutationType{
 	UPDATED
 	DELETED
 }
+# 登录输入类型
+input LoginInput{
+	email: String!
+	password: String!
+}
 
+# 更新评论输入类型
 input UpdateCommentInput{
 	text: String
 }
+
+# 更新文章输入类型
 input UpdatePostInput{
 	title:String
 	body:String
 	published:Boolean
 }
+# 更新用户输入类型
 input UpdateUserInput{
-	name:String
+	username:String
 	email:String
 	age:Int
+	password:String
 }
 # 创建用户的输入类型
 input CreateUserInput{
-	name:String!
+	username:String!
 	email:String!
 	age:Int
+	password:String!
 }
 # 创建文章的输入类型
 input CreatePostInput{
 	title:String!
 	body:String!
 	published:Boolean!
-	author:ID!
 }
 # 创建评论的输入类型
 input CreateCommentInput{
 	text:String!
-	author:ID!
 	post:ID!
 }
 # 用户类型
 type User{
 	id:ID!
-	name:String!
+	username:String!
 	email:String!
 	age:Int
 	posts:[Post]!
@@ -89,7 +104,7 @@ type Post{
 	author:User!
 	comments:[Comment]!
 }
-# 评论类型
+## 评论类型
 type Comment{
 	id:ID!
 	text: String!

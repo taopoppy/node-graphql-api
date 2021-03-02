@@ -25,14 +25,14 @@ const {
 // 定义查询
 const QueryType = new GraphQLObjectType({
   name: "QueryType",
-  description: "Queries",
+  description: "查询",
   fields: { users, user, posts, post, comments, comment },
 })
 
 //定义突变
 const MutationType = new GraphQLObjectType({
   name: "MutationType",
-  description: "Mutations",
+  description: "突变",
   fields: {
     register, // 注册
     login, // 登录
