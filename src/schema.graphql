@@ -2,34 +2,35 @@
 type Query{
 	users(query:String):[User!]!
 	posts(query:String): [Post]!
-	comments:[Comment!]!
+	comments(query:String):[Comment!]!
 }
 
-# 根突变
+#根突变
 type Mutation{
 	login(data:LoginInput!):LoginResponse!
 	createUser(data:CreateUserInput!):User!
 	createPost(data:CreatePostInput!):Post!
 	createComment(data:CreateCommentInput!):Comment!
 	deleteUser(userid:ID!):User!
-	deletePost(id:ID!):Post!
-	deleteComment(id:ID!):Comment!
+	deletePost(postid:ID!):Post!
+	deleteComment(commentid:ID!):Comment!
 	updateUser(data:UpdateUserInput!):User!
-	updatePost(id:ID!,data:UpdatePostInput!):Post!
-	updateComment(id:ID!,data:UpdateCommentInput!):Comment!
+	updatePost(postid:ID!,data:UpdatePostInput!):Post!
+	updateComment(commentid:ID!,data:UpdateCommentInput!):Comment!
 }
 
+# 登录返回响应类型
 type LoginResponse{
 	message: String!
 	user:User
 	token: String
 }
-# 订阅类型
+#订阅类型
 type Subscription{
 	comment(postId:ID!):commentSubscriptionPayload!
 	post:postSubscriptionPayload!
 }
-# 文章订阅
+#文章订阅
 type postSubscriptionPayload{
 	mutation:MutationType!
 	data:Post!
@@ -38,55 +39,55 @@ type commentSubscriptionPayload{
 	mutation:MutationType!
 	data:Comment!
 }
-# MutationType当中定义的就是字符串
+#MutationType当中定义的就是字符串
 enum MutationType{
 	CREATED
 	UPDATED
 	DELETED
 }
-# 登录输入类型
+#登录输入类型
 input LoginInput{
 	email: String!
 	password: String!
 }
 
-# 更新评论输入类型
+#更新评论输入类型
 input UpdateCommentInput{
 	text: String
 }
 
-# 更新文章输入类型
+#更新文章输入类型
 input UpdatePostInput{
 	title:String
 	body:String
 	published:Boolean
 }
-# 更新用户输入类型
+#更新用户输入类型
 input UpdateUserInput{
 	username:String
 	email:String
 	age:Int
 	password:String
 }
-# 创建用户的输入类型
+#创建用户的输入类型
 input CreateUserInput{
 	username:String!
 	email:String!
 	age:Int
 	password:String!
 }
-# 创建文章的输入类型
+#创建文章的输入类型
 input CreatePostInput{
 	title:String!
 	body:String!
 	published:Boolean!
 }
-# 创建评论的输入类型
+#创建评论的输入类型
 input CreateCommentInput{
 	text:String!
 	post:ID!
 }
-# 用户类型
+#用户类型
 type User{
 	id:ID!
 	username:String!
@@ -95,7 +96,7 @@ type User{
 	posts:[Post]!
 	comments:[Comment!]!
 }
-# 文章类型
+#文章类型
 type Post{
 	id:ID!
 	title:String!
@@ -104,7 +105,7 @@ type Post{
 	author:User!
 	comments:[Comment]!
 }
-## 评论类型
+#评论类型
 type Comment{
 	id:ID!
 	text: String!

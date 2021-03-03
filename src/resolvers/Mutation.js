@@ -4,7 +4,7 @@ const { createJwtToken, authenticate } = require('../middleware/auth')
 const User = require('../models/User.js')
 
 const Mutation = {
-	// 登录
+	// 登录（完成）
 	async login(parent, args, ctx, info){
 		const { data } = args
 		const { email, password } = data
@@ -20,7 +20,7 @@ const Mutation = {
 			token
 		}
 	},
-	// 创建新用户
+	// 创建新用户（完成）
 	async createUser(parent, args, ctx, info) {
 		const { data } = args
 		const { email, username, password, age } = data
@@ -38,7 +38,7 @@ const Mutation = {
 		await newUser.save()
 		return newUser
 	},
-	// 创建新文章
+	// 创建新文章（完成）
 	async createPost(parent, args, ctx, info) {
 		const { req, pubsub } = ctx
 		const { data } = args
@@ -65,7 +65,7 @@ const Mutation = {
 		await newPost.save()
 		return newPost
 	},
-	// 创建新评论
+	// 创建新评论（完成）
 	async createComment(parent, args, ctx, info) {
 		const { req, pubsub } = ctx
 
@@ -93,7 +93,7 @@ const Mutation = {
 		await newComment.save()
 		return newComment
 	},
-	// 删除用户
+	// 删除用户（完成）
 	async deleteUser(parent,args,ctx, info){
 		const { req, pubsub } = ctx
 
@@ -112,74 +112,95 @@ const Mutation = {
 		if(userid !== id) {
 			throw new Error("无权删除其他用户")
 		}
-		// 删除自己
-		const userDeleted = await User.findByIdAndDelete(id)
+		// 1. 删除自己
+		const userDeleted = await UserModel.findByIdAndDelete(id)
 		if(!userDeleted) {
-			throw new Error("删除失败")
+			throw new Error("数据库删除用户失败")
 		}
 
-		// 2. 同时要删除该作者写的文章
-		// db.allPosts = db.allPosts.filter((post) => {
-		// 	const match = post.author === id
-		// 	// 同时删除该文章下的所有评论
-		// 	if(match) {
-		// 		db.allComments = db.allComments.filter((comment)=> comment.post!==post.id)
-		// 	}
+		// 2. 同时要删除该作者写的文章以及文章下所有评论
+		const userPosts = await PostModel.find({authorId: id})
+		for(let i= 0; i< userPosts.length; i++) {
+			// 删除文章下的所有评论
+			let everyPost = userPosts[i]
+			await CommentModel.deleteMany({postId: everyPost._id})
+			// 删除文章自己
+			await everyPost.delete()
+		}
 
-		// 	return !match
-		// })
-
-		// 3. 最后要删除该作者所发表的所有评论
-		// db.allComments = db.allComments.filter((comment)=> comment.author!==id)
-		// return user
+		// 4. 最后要删除该作者所发表的所有评论
+		const commentDeleted = await CommentModel.deleteMany({authorId: id})
+		if(!commentDeleted) {
+			throw new Error("数据库删除用户相关文章和评论失败")
+		}
 		return userDeleted
 	},
-	// 删除文章
+	// 删除文章（完成）
 	async deletePost(parent,args,ctx,info) {
-		const { db, pubsub } = ctx
-		const { id } = args
-		// 1.先检查文章存在否
-		const post = db.allPosts.find((post) => post.id ===id)
-		if(!post){
-			throw new Error("文章不存在")
+		const { req, pubsub } = ctx
+
+		// 删除用户先要鉴权
+		const decodeResult = authenticate(req)
+		const {id, email} = decodeResult
+		// 判断author是否存在
+		const user = await UserModel.findOne({_id: id, email})
+		if(!user) {
+			throw new Error("用户不存在")
+		}
+
+		const { postid } = args
+		// 判断文章是否存在
+		const postDeleted = await PostModel.findById(postid)
+		if(!postDeleted){
+			throw new Error("要删除的文章不存在")
+		}
+
+		// 判断文章的作者是否是用户
+		if(postDeleted.authorId !== id) {
+			throw new Error("无法删除不是自己写的文章")
 		}
 
 		// 2. 删除文章
-		db.allPosts = db.allPosts.filter((post)=> post.id!==id)
-
+		const postDeletedResult = await postDeleted.delete()
 		// 3. 删除该文章下面所有的评论
-		db.allComments = db.allComments.filter((comment)=> comment.post!==id)
-		if(post.published) {
-			pubsub.publish("post", {
-				post: {
-					mutation: "DELETED",
-					data: post
-				}
-			})
+		const commentsDeleted = await CommentModel.deleteMany({postId:postid})
+		if(!postDeletedResult && commentsDeleted) {
+			throw new Error("数据库删除文章相关信息失败")
 		}
-		return post
+
+		return postDeletedResult
 	},
-	// 删除评论
+	// 删除评论（完成）
 	async deleteComment(parent,args,ctx,info){
-		const { db,pubsub } = ctx
-		const { id } = args
-		// 1.先检查评论存在否
-		const comment = db.allComments.find((comment) => comment.id ===id)
-		if(!comment){
-			throw new Error("评论不存在")
+		const { req, pubsub } = ctx
+
+		// 删除用户先要鉴权
+		const decodeResult = authenticate(req)
+		const {id, email} = decodeResult
+		// 判断author是否存在
+		const user = await UserModel.findOne({_id: id, email})
+		if(!user) {
+			throw new Error("用户不存在")
+		}
+
+		const { commentid } = args
+		// 判断评论是否存在
+		const commentDeleted = await CommentModel.findById(commentid)
+		if(!commentDeleted){
+			throw new Error("要删除的评论不存在")
+		}
+
+		// 判断评论的作者是否是用户
+		if(commentDeleted.authorId !== id) {
+			throw new Error("无法删除不是自己写的评论")
 		}
 
 		// 2. 删除评论
-		db.allComments = db.allComments.filter((comment)=> comment.id!==id)
-		pubsub.publish(`comment ${comment.post}`, {
-			comment: {
-				mutation: "DELETED",
-				data: comment
-			}
-		})
-		return comment
+		const commentDeletedResult = await commentDeleted.delete()
+
+		return commentDeletedResult
 	},
-	// 更新用户信息
+	// 更新用户信息（完成）
 	async updateUser(parent, args, ctx, info) {
 		const { req, pubsub } = ctx
 		const { data } = args
@@ -194,98 +215,106 @@ const Mutation = {
 			throw new Error("用户不存在")
 		}
 
-		const { username, email, age, password } = data
-
-		// 判断邮箱需要保证唯一性
-		const emailExist = await UserModel.findOne({email})
-		if(emailExist) {
-			throw new Error("新的邮箱已经被占用")
+		if(data && data.email) {
+			// 判断邮箱需要保证唯一性
+			const emailExist = await UserModel.findOne({email})
+			if(emailExist) {
+				throw new Error("新的邮箱已经被占用")
+			}
 		}
 
-		const userUpdated = await UserModel.findByIdAndUpdate(
-		id,
-		{
-			username: username!=undefined? username: user.username,
-			email: email!==undefined? email: user.email,
-			age: age!=undefined? age: user.age,
-			password: password!=undefined? password: user.password,
-		}
-		)
+		const userUpdated = await UserModel.findByIdAndUpdate(id,{...data})
+
 		if(!userUpdated){
-			throw new Error("更新失败")
+			throw new Error("数据库更新用户失败")
 		}
 
 		return userUpdated
 	},
+	// 更新文章（完成）
 	async updatePost(parent, args, ctx, info) {
-		const { db,pubsub } = ctx
-		const { id, data } = args
-		// 检查更新的文章是否存在
-		const post = db.allPosts.find((post) => post.id === id)
-		const oldPost = {...post}
-		if(!post) {
-			throw new Error("要修改的文章不存在")
-		}
-		// 判断标题
-		if(typeof data.title === 'string') {
-			post.title = data.title
-		}
-		// 判断内容
-		if(typeof data.body === 'string') {
-			post.body = data.body
-		}
-		// 判断上传
-		if(typeof data.published === 'boolean') {
-			post.published = data.published
-			if(!oldPost.published && post.published) {
-				// 文章的published属性由false变为true叫做created
-				pubsub.publish("post", {
-					post: {
-						mutation: "CREATED",
-						data: post
-					}
-				})
-			}
-			if(oldPost.published && !post.published) {
-				// 文章的published属性由true变为false叫做delete
-				pubsub.publish("post", {
-					post: {
-						mutation: "DELETED",
-						data: post
-					}
-				})
-			}
-		} else if(post.published) {
-			// 文章的标题和内容在published为true的情况下变化才叫updated
-			pubsub.publish("post", {
-				post: {
-					mutation: "UPDATED",
-					data: post
-				}
-			})
+		const { req,pubsub } = ctx
+		const { postid, data } = args
+
+		// 更新文章先要鉴权
+		const decodeResult = authenticate(req)
+		const { id } = decodeResult
+		// 判断author是否存在
+		const user = await UserModel.findOne({_id: id})
+		if(!user) {
+			throw new Error("用户不存在")
 		}
 
-		return post
+		// 检查更新的文章是否存在
+		const oldPost = await PostModel.findById(postid)
+		if(!oldPost) {
+			throw new Error("文章不存在")
+		}
+		// 判断用户是否和文章作者一致
+		if(id!==oldPost.authorId) {
+			throw new Error("无法修改其他作者的文章")
+		}
+
+		const { title, body, published } = data
+		let newPost = {}
+
+		// 判断标题
+		if(typeof title === 'string') {
+			newPost.title = title
+		}
+		// 判断内容
+		if(typeof body === 'string') {
+			newPost.body = body
+		}
+		if(typeof published === 'boolean') {
+			newPost.published = published
+		}
+		// 更新文章
+		const postUpdated = await PostModel.findByIdAndUpdate(postid,{...newPost})
+		if(!postUpdated){
+			throw new Error("数据库更新文章失败")
+		}
+
+		return postUpdated
 	},
+	// 更新评论（完成）
 	async updateComment(parent, args, ctx, info) {
-		const { db, pubsub } = ctx
-		const { id, data } = args
-		// 检查评论是否存在
-		const comment = db.allComments.find((comment)=> comment.id === id)
-		if(!comment) {
-			throw new Error("要修改的评论不存在")
+		const { req,pubsub } = ctx
+		const { commentid, data } = args
+
+		// 更新评论先要鉴权
+		const decodeResult = authenticate(req)
+		const { id } = decodeResult
+		// 判断author是否存在
+		const user = await UserModel.findOne({_id: id})
+		if(!user) {
+			throw new Error("用户不存在")
 		}
-		// 判断评论内容
-		if(typeof data.text === 'string') {
-			comment.text = data.text
+
+		// 检查更新的评论是否存在
+		const oldComment = await CommentModel.findById(commentid)
+		if(!oldComment) {
+			throw new Error("评论不存在")
 		}
-		pubsub.publish(`comment ${comment.post}`, {
-			comment: {
-				mutation: "UPDATED",
-				data: comment
-			}
-		})
-		return comment
+		// 判断用户是否和评论作者一致
+		if(id!==oldComment.authorId) {
+			throw new Error("无法修改其他作者的评论")
+		}
+
+		const { text } = data
+		let newComment = {}
+
+		// 判断内容
+		if(typeof text === 'string') {
+			newComment.text = text
+		}
+		// 更新评论
+		const commentUpdated = await CommentModel.findByIdAndUpdate(commentid,{...newComment})
+		if(!commentUpdated){
+			throw new Error("数据库更新评论失败")
+		}
+
+		return commentUpdated
 	}
 }
 

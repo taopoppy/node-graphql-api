@@ -1,13 +1,19 @@
-const { PostModel} = require('../models/index')
+const { PostModel, UserModel, CommentModel} = require('../models/index')
 
 const Post = {
-	author(parent, args, ctx, info) {
-		const { db } = ctx
-		return db.allUsers.find(user => user.id===parent.author)
+	// 根据文章的authorid查看用户（完成）
+	async author(parent, args, ctx, info) {
+		const author = await UserModel.findById({
+			_id: parent.authorId
+		})
+		return author
 	},
-	comments(parent, args, ctx, info) {
-		const { db } = ctx
-		return db.allComments.filter(comment => comment.post===parent.id)
+	// 根据文章查看文章下的所有评论（完成）
+	async comments(parent, args, ctx, info) {
+		const comments = await CommentModel.find({
+			postId: parent._id
+		})
+		return comments
 	}
 }
 

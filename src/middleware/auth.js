@@ -12,7 +12,7 @@ const createJwtToken = (user) => {
 const authenticate = (req) => {
 	const header = req.request.headers.authorization
 	if(!header) {
-		throw new Error("no authention")
+		throw new Error("no authention, please login first")
 	}
   const token = header.replace("Bearer ", "")
 
