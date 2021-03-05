@@ -5,6 +5,7 @@ const CryptoJS = require("crypto-js");
 const tripledes = require("crypto-js/tripledes");
 
 const qrImageController = (req, res)=> {
+	console.log("req.body", req.body)
 	// 1.拿到his发来请求中携带的用户id
 	const { hosptialid, insurcetype, name, sex, idcard, age } = req.body
 	if(!hosptialid || !insurcetype || !name || !sex || !idcard || (typeof idcard) !== 'string'){
@@ -25,13 +26,13 @@ const qrImageController = (req, res)=> {
 	const encryptResult = tripledes.encrypt(message, key).toString()
 
 	// 解密写法
-	try {
-		let plaintext  = tripledes.decrypt(encryptResult, key).toString(CryptoJS.enc.Utf8)
-		console.log("plaintext",plaintext)
-		console.log(JSON.parse(plaintext))
-	} catch (error) {
-		console.log("解析失败",error.toString())
-	}
+	// try {
+	// 	let plaintext  = tripledes.decrypt(encryptResult, key).toString(CryptoJS.enc.Utf8)
+	// 	console.log("plaintext",plaintext)
+	// 	console.log(JSON.parse(plaintext))
+	// } catch (error) {
+	// 	console.log("解析失败",error.toString())
+	// }
 
 	// 5. 根据加密信息生成二维码进行返回
 	const temp_qrcode = qr.image(encryptResult, {type: 'png'})

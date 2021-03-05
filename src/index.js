@@ -50,14 +50,13 @@ server.express.all('*', function(req, res, next) {
   next();
 });
 
-
 server.express.use('/static', express.static('public')) // 静态资源访问
 server.express.use(express.json()) // for parsing application/json
 server.express.use(express.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
 
 // restful 风格的路由
 server.express.post('/api/qrImage', Controller.qrImageController) // 生成二维码返回
-server.express.post('/api/uploader',upload.single('avatar'), Controller.upLoaderController) // 上传图片
+server.express.post('/api/uploader',upload.array('images'), Controller.upLoaderController) // 上传多张图片
 server.express.get('/api/image/:id', Controller.downloadController) // 下载图片
 
 server.start(()=> {

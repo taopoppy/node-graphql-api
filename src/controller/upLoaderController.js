@@ -1,6 +1,6 @@
 
 const upLoaderController = (req, res)=> {
-	let file = req.file;
+	let files = req.files;
 	// file信息如下
 	// {
 	// 	fieldname: 'avatar',
@@ -13,7 +13,18 @@ const upLoaderController = (req, res)=> {
   // 	size: 98036
 	// }
 	// 存路径到数据库
-  res.json({message: "ok",fildId: file.filename});
+	let resFileIdArray = []
+	if(Array.isArray(files)) {
+		resFileIdArray = files.map(file => {
+			return file.filename
+		})
+	}
+  res.json(
+		{
+			message: resFileIdArray.length === 0 ?"failed": "ok",
+			fildId: resFileIdArray
+		}
+	);
 }
 
 module.exports = upLoaderController
